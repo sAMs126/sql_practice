@@ -167,12 +167,78 @@ GROUP BY
 	dept_emp.dept_no 
 HAVING
 	MAX( salary )
+
+-- 从titles表获取按照title进行分组，每组个数大于等于2，给出title以及对应的数目t。
+SELECT
+	title,
+	COUNT( title ) AS t 
+FROM
+	titles 
+GROUP BY
+	title 
+HAVING
+	t >= 2
+
+-- 从titles表获取按照title进行分组，每组个数大于等于2，给出title以及对应的数目t。
+-- 注意对于重复的emp_no进行忽略。
+		-- 使用distinct去重
+SELECT
+	title,
+	COUNT( DISTINCT emp_no ) AS t 
+FROM
+	titles 
+GROUP BY
+	title 
+HAVING
+	t >= 2
 	
-	-- 链接：https://www.nowcoder.com/questionTerminal/4a052e3e1df5435880d4353eb18a91c6
-	-- 来源：牛客网
-	-- 
-	-- 如果存在多条最大记录怎么办？而 MAX 函数根据不同数据库只选择最前一条或最后一条最大记录，其余记录均被忽略。此时解法如下：
-	-- 1、创建两张表，一张为maxsalary，用于存放当前每个部门薪水的最大值；另一张为currentsalary，用于存放当前每个部门所有员工的编号和薪水；
-	-- 2、限定条件为两张表的 dept_no 和 salary 相等，这样就可以找出当前每个部门所有薪水等于最大值的员工的相关信息了；
-	-- 3、最后记得根据 currentsalary.dept_no 升序排列，输出与参考答案相同的记录表。
+-- 查找employees表所有emp_no为奇数，且last_name不为Mary的员工信息，并按照hire_date逆序排列
+		-- 1. 查找emp_no为奇数，last_name不为Mary
+		-- 2. 逆序
+SELECT
+	* 
+FROM
+	employees 
+	WHERE
+	last_name != 'Mary'
+-- 	last_name NOT IN ( 'Mary' ) 
+	AND MOD ( emp_no, 2 ) = 1 
+ORDER BY
+	hire_date DESC
+	
+-- 统计出当前各个title类型对应的员工当前薪水对应的平均工资。结果给出title以及平均工资avg。
+SELECT
+	title,
+	AVG( salary ) AS avg 
+FROM
+	salaries
+	INNER JOIN titles ON salaries.emp_no = titles.emp_no 
+WHERE
+	salaries.to_date = '9999-01-01' 
+	AND titles.to_date = '9999-01-01' 
+GROUP BY
+	title
+
+-- 获取当前（to_date='9999-01-01'）薪水第二多的员工的emp_no以及其对应的薪水salary
+	-- ** 注意最高工资相同的情况，通过LIMIT 1,1可能会失效
+SELECT
+	* 
+FROM
+	(SELECT emp_no, salary FROM salaries WHERE to_date='9999-01-01' GROUP BY salary) as s
+ORDER BY
+	salary DESC
+LIMIT 1,1
+
+	-- 1. 首先查询最大的薪水
+	SELECT max(salary) FROM salaries WHERE to_date='9999-01-01'
+	-- 2. 查询第二大薪水
+	SELECT
+		emp_no,
+		max( salary ) 
+	FROM
+		salaries 
+	WHERE
+		to_date = '9999-01-01' 
+		AND salary < ( SELECT max( salary ) FROM salaries WHERE to_date = '9999-01-01' )
+	LIMIT 0,1
 	
